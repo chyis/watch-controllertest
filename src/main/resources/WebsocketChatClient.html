@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>手表控制程序界面</title>
+</head>
+<body>
+<script type="text/javascript">
+
+var socket;
+if (!window.WebSocket) {
+	window.WebSocket = window.MozWebSocket;
+}
+if (window.WebSocket) {
+	var mid = document.forms['cmdform'].merchantid.value;
+	var did = document.forms['cmdform'].deviceid.value;
+
+	//socket = new WebSocket("ws://39.106.37.140:9199/ws?mid="+mid+"&did"+did);
+	socket = new WebSocket("ws://127.0.0.1:9199/ws?mid="+mid+"&did"+did);
+	socket.onmessage = function(event) {
+		var ta = document.getElementById('responseText');
+		ta.value = ta.value + '\n' + event.data
+	};
+	socket.onopen = function(event) {
+		var ta = document.getElementById('responseText');
+		ta.value = "服务器连接开启!\n";
+	};
+	socket.onclose = function(event) {
+		var ta = document.getElementById('responseText');
+		ta.value = ta.value + "服务器连接被关闭\n";
+	};
+} else {
+	alert("你的浏览器不支持 WebSocket！");
+}
+
+function send(merchantid,deviceid,commond) {
+	var cmd = "";
+	if (!window.WebSocket) {
+		return;
+	}
+	if (socket.readyState == WebSocket.OPEN) {
+		if(commond=='WALKTIME'||commond=='SLEEPTIME'||commond=='SILENCETIME'){
+			var option="";
+			var starttime1 = document.forms['cmdform'].starttime1.value;
+			var endtime1 = document.forms['cmdform'].endtime1.value;
+			var starttime2 = document.forms['cmdform'].starttime2.value;
+			var endtime2 = document.forms['cmdform'].endtime2.value;
+			
+			if(starttime1!='' && endtime1!=''){
+				option=option+","+starttime1+"-"+endtime1;
+			}
+			
+			if(starttime2!='' && endtime2!=''){
+				option=option+","+starttime2+"-"+endtime2;
+			}
+			
+			cmd="{\"merchantid\":\""+merchantid+"\",\"deviceid\":\""+deviceid+"\",\"commond\":\""+commond+"\",\"options\":\""+option+"\"}";
+		}else if(commond=='UPLOAD'){
+			var option = document.forms['cmdform'].interval.value;
+			if(option!=""){
+				cmd="{\"merchantid\":\""+merchantid+"\",\"deviceid\":\""+deviceid+"\",\"commond\":\""+commond+"\",\"options\":\","+option+"\"}";
+			}
+		}else{
+			cmd="{\"merchantid\":\""+merchantid+"\",\"deviceid\":\""+deviceid+"\",\"commond\":\""+commond+"\",\"options\":\"\"}";
+		}
+		
+		socket.send(cmd);
+	} else {
+		alert("服务器连接没有开启.\n");
+	}
+}
+
+var timer = setInterval(function(){
+		socket.send("heartbeat");
+},3000);
+
+</script>
+<form name="cmdform" id="cmdform" onsubmit="return false;">
+		<h3>手表上报数据内容:</h3>
+		<textarea id="responseText" style="width: 500px; height: 300px;"></textarea>
+		<br></br>
+		厂商编号：<input type="text" name="merchantid" style="width: 300px" value="3g"></br></br>
+		设备标识：<input type="text" name="deviceid" style="width: 300px" value="3923310632"></br></br>
+		选择命令：<select name="commond" id="">
+		<option value="">选择命令</option>
+
+		<option value="UPLOAD">设置同步时间</option>
+		
+		<option value="LOWBAT,1">低电量报警开启</option>
+		<option value="LOWBAT,0">低电量报警关闭</option>
+		
+		<option value="SOSSMS,1">短信报警开启</option>
+		<option value="SOSSMS,0">短信报警关闭</option>
+		
+		<option value="REMOVE,1">取下手环报警开启</option>
+		<option value="REMOVE,0">取下手环报警关闭</option>
+		
+		<option value="PEDO,1">计步功能开启</option>
+		<option value="PEDO,0">计步功能关闭</option>
+		
+		<option value="WALKTIME">计步时间段设置</option>
+		
+		<option value="SLEEPTIME">翻转检测时间段设置</option>
+		
+		<option value="SILENCETIME">免打扰时间段设置</option>
+		
+		<option value="CR">获取地址信息</option>
+		
+		<option value="FACTORY">恢复出厂设置</option>
+		<option value="RESET">重启</option>
+		<option value="POWEROFF">关机</option>
+		<option value="VERNO">版本查询</option>
+		</select>
+		</br></br>
+		上传间隔：<input placeholder="60" name="interval"  size="10" value=""/> 秒
+		</br></br>
+		时间区间1：<input placeholder="7:10" name="starttime1"  size="10" value=""/>-<input name="endtime1" placeholder="21:10" value="" size="10"/>
+		</br></br>
+		时间区间2：<input placeholder="7:10" name="starttime2" size="10" value=""/>-<input name="endtime2" placeholder="21:10" value="" size="10"/>
+		</br></br>
+		<input type="button" value="发送命令" onclick="send(this.form.merchantid.value,this.form.deviceid.value,this.form.commond.value)">
+		<input type="button" onclick="javascript:document.getElementById('responseText').value=''" value="清空通讯记录">
+</form>
+<br>
+<br>
+</body>
+</html>
