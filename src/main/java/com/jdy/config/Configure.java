@@ -21,9 +21,9 @@ public class Configure {
     // user name
     public final static String USERNAME = "root";
     // password
-    public final static String PASSWORD = "A72byte!data";
+    public final static String PASSWORD = "**********";
     // your database name
-    public final static String DBNAME   = "akeqi";
+    public final static String DBNAME   = "watch";
     // mysql driver
     public final static String DRIVER   = "com.mysql.jdbc.Driver";
     // mysql url
